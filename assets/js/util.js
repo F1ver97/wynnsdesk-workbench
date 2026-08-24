@@ -37,6 +37,27 @@
     setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 2600);
   }
 
+  /* --------------------------- 复制文本到剪贴板（含降级兼容） --------------------------- */
+  function copyText(text) {
+    text = String(text || '').trim();
+    if (!text) { toast('没有可复制的内容', 'error'); return; }
+    const done = () => toast('已复制链接', 'success');
+    const fallback = () => {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-1000px'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (ok) done(); else toast('复制失败，请手动复制', 'error');
+      } catch (e) { toast('复制失败，请手动复制', 'error'); }
+    };
+    try {
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback);
+      else fallback();
+    } catch (e) { fallback(); }
+  }
+
   /* --------------------------- 模态框 --------------------------- */
   function modal({ title, body, actions, width }) {
     return new Promise((resolve) => {
@@ -325,5 +346,5 @@
     return box;
   }
 
-  global.U = { el, esc, fmtNum, fmtDate, fmtDateTime, daysFromNow, uid, toast, modal, confirm, readForm, calendarPicker, multiSelect, linkList, tagInput, dataUrlToBlob, openFile, downloadFile, fileModal, buildFileUpload };
+  global.U = { el, esc, fmtNum, fmtDate, fmtDateTime, daysFromNow, uid, toast, modal, confirm, readForm, calendarPicker, multiSelect, linkList, tagInput, dataUrlToBlob, openFile, downloadFile, fileModal, buildFileUpload, copyText };
 })(window);

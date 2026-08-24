@@ -69,17 +69,18 @@
     dyn.appendChild(grid);
   }
 
-  /* 卡片内渲染对标视频链接（前 3 条可点击，超出折叠） */
+  /* 卡片内渲染对标视频链接（前 3 条：链接 + 一键复制，超出折叠） */
   function renderLinks(comps) {
     if (!comps || !comps.length) return null;
     const box = U.el('div', { style: 'margin-top:4px' });
     comps.slice(0, 3).forEach(u => {
       const safe = safeUrl(u);
-      box.appendChild(U.el('div', { style: 'font-size:12px;margin-top:2px' }, [
-        safe
-          ? U.el('a', { href: safe, target: '_blank', rel: 'noopener', text: '🔗 ' + truncate(u, 38), style: 'color:var(--pink-2);word-break:break-all' })
-          : U.el('span', { class: 'muted', text: '🔗 ' + truncate(u, 38) }),
-      ]));
+      const line = U.el('div', { style: 'font-size:12px;margin-top:2px;display:flex;align-items:center;gap:6px' });
+      line.appendChild(safe
+        ? U.el('a', { href: safe, target: '_blank', rel: 'noopener', text: '🔗 ' + truncate(u, 30), style: 'color:var(--pink-2);word-break:break-all;flex:1;min-width:0' })
+        : U.el('span', { class: 'muted', text: '🔗 ' + truncate(u, 30), style: 'flex:1;min-width:0' }));
+      line.appendChild(U.el('span', { class: 'link', text: '📋 复制', style: 'flex:none;font-size:11px;cursor:pointer;white-space:nowrap', onclick: (e) => { e.stopPropagation(); U.copyText(u); } }));
+      box.appendChild(line);
     });
     if (comps.length > 3) box.appendChild(U.el('div', { class: 'muted', style: 'font-size:11px;margin-top:2px', text: '…等 ' + comps.length + ' 条（点开查看全部）' }));
     return box;
