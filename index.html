@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>✦ 工作台 · Wynn</title>
+  <link rel="stylesheet" href="assets/css/styles.css?v=2026082515" />
+</head>
+<body>
+  <div class="app">
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="logo">工作台<br><small>Wynn</small></div>
+      </div>
+      <nav class="nav" id="nav"><!-- 由 app.js 动态生成 --></nav>
+      <div class="sidebar-foot">
+        <span class="storage-badge"><span class="dot"></span><span id="storageMode">检测中…</span></span>
+        <div style="margin-top:6px">v1.0 · 数据本地加密存储</div>
+      </div>
+    </aside>
+
+    <div class="scrim" id="scrim"></div>
+
+    <!-- 主区 -->
+    <main class="main">
+      <header class="topbar">
+        <button class="hamburger" id="hamburger" aria-label="菜单">☰</button>
+        <h1 id="pageTitle">工作台</h1>
+        <div class="spacer"></div>
+        <input class="search" id="globalSearch" placeholder="🔍 搜索灵感 / 商单 / 脚本…" />
+      </header>
+      <!-- 顶部常驻 AI 中枢（可折叠） -->
+      <section class="ai-hub" id="aiHub"></section>
+      <section class="view" id="view">
+        <div class="loader"><span class="spin"></span><div style="margin-top:14px">正在唤醒工作台…</div></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 依赖加载顺序：Supabase → 配置 → 数据层 → 工具 → 图表 → 应用核心 → 各模块 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase-config.js?v=2026082515"></script>
+  <script src="assets/js/db.js?v=2026082515"></script>
+  <script src="assets/js/util.js?v=2026082515"></script>
+  <script src="assets/js/ai.js?v=2026082515"></script>
+  <script src="assets/js/charts.js?v=2026082515"></script>
+  <script src="assets/js/app.js?v=2026082515"></script>
+  <script src="assets/js/modules/dashboard.js?v=2026082515"></script>
+  <script src="assets/js/modules/inspiration.js?v=2026082515"></script>
+  <script src="assets/js/modules/orders.js?v=2026082515"></script>
+  <script src="assets/js/modules/schedule.js?v=2026082515"></script>
+  <script src="assets/js/modules/scripts.js?v=2026082515"></script>
+  <script src="assets/js/modules/briefs.js?v=2026082515"></script>
+  <script src="assets/js/modules/settings.js?v=2026082515"></script>
+  <script src="assets/js/modules/admin.js?v=2026082515"></script>
+</body>
+</html>
