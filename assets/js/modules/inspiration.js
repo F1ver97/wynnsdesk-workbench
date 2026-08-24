@@ -117,7 +117,22 @@
         U.el('div', { style: 'font-size:15px;font-weight:800', text: it.title || '未命名灵感' }),
         U.el('div', { class: 'tag-row', style: 'margin-top:8px' }, (it.categories && it.categories.length ? it.categories : []).map(c => U.el('span', { class: 'badge pink', text: c }))),
         it.note ? U.el('div', { class: 'muted', style: 'font-size:13px;margin-top:8px;line-height:1.6', text: it.note }) : null,
-        compN ? U.el('div', { class: 'muted', style: 'font-size:12.5px;margin-top:8px', text: '🔗 对标视频：' + compN + ' 条（已同步到对标拆解）' }) : null,
+        compN ? (function () {
+          const box = U.el('div', { style: 'margin-top:8px' });
+          box.appendChild(U.el('div', { class: 'muted', style: 'font-size:12.5px', text: '🔗 对标视频：' + compN + ' 条（已同步到对标拆解）' }));
+          (it.competitors || []).slice(0, 3).forEach(u => {
+            const safe = (function () { try { const p = new URL(u); return (p.protocol === 'http:' || p.protocol === 'https:') ? u : null; } catch (_) { return null; } })();
+            const t = u.length > 30 ? u.slice(0, 30) + '…' : u;
+            const line = U.el('div', { style: 'font-size:12px;margin-top:2px;display:flex;align-items:center;gap:6px' });
+            line.appendChild(safe
+              ? U.el('a', { href: safe, target: '_blank', rel: 'noopener', text: '🔗 ' + t, style: 'color:var(--pink-2);word-break:break-all;flex:1;min-width:0' })
+              : U.el('span', { class: 'muted', text: '🔗 ' + t, style: 'flex:1;min-width:0' }));
+            line.appendChild(U.copyBtn(u));
+            box.appendChild(line);
+          });
+          if (compN > 3) box.appendChild(U.el('div', { class: 'muted', style: 'font-size:11px', text: '…等 ' + compN + ' 条（点开查看全部）' }));
+          return box;
+        })() : null,
         U.el('div', { class: 'foot' }, [
           U.el('span', { class: 'link', text: '✎ 编辑', onclick: (e) => { e.stopPropagation(); editIdea(it); } }),
           U.el('span', { class: 'link danger', text: '🗑 删除', onclick: async (e) => { e.stopPropagation(); if (await U.confirm('删除该灵感？', true)) { await DB.removeQuiet('inspiration', it.id); const card = e.target.closest('.card'); if (card) card.remove(); U.toast('已删除', 'success'); } } }),
@@ -246,7 +261,12 @@
           U.el('div', { style: 'font-weight:800;font-size:15px', text: '对标视频' }),
           U.el('span', { class: 'badge pink', text: it.platform || '其他' }),
         ]),
-        it.url ? U.el('a', { class: 'link', href: it.url, target: '_blank', text: '🔗 ' + it.url, style: 'word-break:break-all;display:block;margin-top:6px;font-size:13px', onclick: (e) => e.stopPropagation() }) : null,
+        it.url ? (function () {
+          const line = U.el('div', { style: 'display:flex;align-items:center;gap:6px;margin-top:6px' });
+          line.appendChild(U.el('a', { class: 'link', href: it.url, target: '_blank', text: '🔗 ' + it.url, style: 'word-break:break-all;flex:1;min-width:0;font-size:13px', onclick: (e) => e.stopPropagation() }));
+          line.appendChild(U.copyBtn(it.url));
+          return line;
+        })() : null,
         tags.length ? U.el('div', { class: 'tag-row', style: 'margin-top:8px' }, tags.map(t => U.el('span', {
           class: 'badge pink', style: 'cursor:pointer', text: t,
           onclick: (e) => { e.stopPropagation(); state.compTag = t; App.render(); }
@@ -272,7 +292,11 @@
     const w1 = U.el('div', { class: 'field' });
     w1.appendChild(U.el('label', { text: '1 · 视频链接' }));
     const urlI = U.el('input', { name: 'url', placeholder: 'https://...', value: (it && it.url) || '' });
-    w1.appendChild(urlI); form.appendChild(w1);
+    w1.appendChild(urlI);
+    w1.appendChild(U.el('div', { style: 'margin-top:6px' }, [
+      U.el('span', { class: 'link', text: '📋 复制当前链接', style: 'cursor:pointer;font-size:12px', onclick: () => U.copyText(urlI.value) }),
+    ]));
+    form.appendChild(w1);
 
     // 2 · 平台
     const w2 = U.el('div', { class: 'field' });

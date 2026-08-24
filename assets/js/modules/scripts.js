@@ -50,7 +50,7 @@
           U.el('span', { class: 'badge pink', text: ym }),
         ]),
         U.el('div', { style: 'margin:6px 0', class: 'tag-row' }, (s.formats && s.formats.length ? s.formats : ['(未选形式)']).map(f => U.el('span', { class: 'badge dim', text: f }))),
-        U.el('div', { class: 'muted', style: 'font-size:12.5px;line-height:1.6', text: '🔗 对标视频：' + compN + ' 条' }),
+        renderCompLinks(s.competitors),
         U.el('div', { class: 'muted', style: 'font-size:12px;margin-top:4px', text: '📅 脚本档期：' + (s.scriptDate || '—') + ' ｜ 发布档期：' + (s.publishDate || '—') }),
         U.el('div', { class: 'muted', style: 'font-size:12px;margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center' }, [
           s.attachment
@@ -227,6 +227,11 @@
         const del = U.el('span', { class: 'link danger', text: '✕', style: 'cursor:pointer' });
         del.addEventListener('click', () => { arr.splice(idx, 1); if (arr.length === 0) arr.push(''); render(); });
         row.appendChild(inp); row.appendChild(del);
+        if (val && val.trim()) {
+          const cp = U.el('span', { class: 'link', text: '📋', title: '复制该链接', style: 'cursor:pointer;flex:none' });
+          cp.addEventListener('click', () => U.copyText(inp.value));
+          row.appendChild(cp);
+        }
         box.appendChild(row);
       });
       const add = U.el('button', { class: 'btn btn-sm', type: 'button', text: '＋ 添加链接' });
@@ -323,5 +328,24 @@
       ]),
     ]));
     U.modal({ title: '版本对比 · v' + v.v + ' ↔ 当前', body: U.el('div', {}, rows), width: 680, actions: [{ label: '关闭', value: true, primary: true }] });
+  }
+
+  /* 卡片内渲染对标视频链接（前 3 条：链接 + 一键复制，超出折叠） */
+  function renderCompLinks(comps) {
+    const box = U.el('div', { style: 'margin-top:4px' });
+    if (!comps || !comps.length) { box.appendChild(U.el('div', { class: 'muted', style: 'font-size:12.5px;line-height:1.6', text: '🔗 对标视频：0 条' })); return box; }
+    box.appendChild(U.el('div', { class: 'muted', style: 'font-size:12.5px;line-height:1.6', text: '🔗 对标视频：' + comps.length + ' 条' }));
+    comps.slice(0, 3).forEach(u => {
+      const safe = (function () { try { const p = new URL(u); return (p.protocol === 'http:' || p.protocol === 'https:') ? u : null; } catch (_) { return null; } })();
+      const t = u.length > 30 ? u.slice(0, 30) + '…' : u;
+      const line = U.el('div', { style: 'font-size:12px;margin-top:2px;display:flex;align-items:center;gap:6px' });
+      line.appendChild(safe
+        ? U.el('a', { href: safe, target: '_blank', rel: 'noopener', text: '🔗 ' + t, style: 'color:var(--pink-2);word-break:break-all;flex:1;min-width:0' })
+        : U.el('span', { class: 'muted', text: '🔗 ' + t, style: 'flex:1;min-width:0' }));
+      line.appendChild(U.copyBtn(u));
+      box.appendChild(line);
+    });
+    if (comps.length > 3) box.appendChild(U.el('div', { class: 'muted', style: 'font-size:11px;margin-top:2px', text: '…等 ' + comps.length + ' 条（点开查看全部）' }));
+    return box;
   }
 })();

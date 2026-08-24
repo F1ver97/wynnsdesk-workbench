@@ -43,8 +43,9 @@
     } });
     invWrap.appendChild(invI); invWrap.appendChild(genBtn);
     panel.appendChild(invWrap);
-    const invOut = U.el('input', { readonly: true, placeholder: '邀请链接将显示在这里，可一键复制', style: 'width:100%;margin-bottom:6px' });
-    panel.appendChild(invOut);
+    const invOut = U.el('input', { readonly: true, placeholder: '邀请链接将显示在这里，可一键复制', style: 'flex:1;min-width:220px' });
+    const copyInv = U.el('button', { class: 'btn btn-sm', text: '📋 复制', onclick: () => U.copyText(invOut.value) });
+    panel.appendChild(U.el('div', { style: 'display:flex;gap:8px;align-items:center;margin:4px 0 10px' }, [invOut, copyInv]));
     panel.appendChild(U.el('div', { class: 'muted', style: 'font-size:12px;margin-bottom:10px', text: '同事点开链接 → 自己设密码注册 → 自动进入共享工作区。无需你保管密码。' }));
 
     // 已注册成员列表

@@ -58,6 +58,11 @@
     } catch (e) { fallback(); }
   }
 
+  /* 通用复制按钮：返回「📋 复制」span，点击复制 text */
+  function copyBtn(text) {
+    return U.el('span', { class: 'link', text: '📋 复制', style: 'flex:none;font-size:11px;cursor:pointer;white-space:nowrap', onclick: (e) => { if (e) e.stopPropagation(); U.copyText(text); } });
+  }
+
   /* --------------------------- 模态框 --------------------------- */
   function modal({ title, body, actions, width }) {
     return new Promise((resolve) => {
@@ -178,6 +183,11 @@
         const del = el('span', { class: 'link danger', text: '✕', style: 'cursor:pointer' });
         del.addEventListener('click', () => { arr.splice(idx, 1); if (arr.length === 0) arr.push(''); render(); });
         row.appendChild(inp); row.appendChild(del);
+        if (val && val.trim()) {
+          const cp = el('span', { class: 'link', text: '📋', title: '复制该链接', style: 'cursor:pointer;flex:none' });
+          cp.addEventListener('click', () => U.copyText(inp.value));
+          row.appendChild(cp);
+        }
         box.appendChild(row);
       });
       const add = el('button', { class: 'btn btn-sm', type: 'button', text: '＋ 添加链接' });
@@ -346,5 +356,5 @@
     return box;
   }
 
-  global.U = { el, esc, fmtNum, fmtDate, fmtDateTime, daysFromNow, uid, toast, modal, confirm, readForm, calendarPicker, multiSelect, linkList, tagInput, dataUrlToBlob, openFile, downloadFile, fileModal, buildFileUpload, copyText };
+  global.U = { el, esc, fmtNum, fmtDate, fmtDateTime, daysFromNow, uid, toast, modal, confirm, readForm, calendarPicker, multiSelect, linkList, tagInput, dataUrlToBlob, openFile, downloadFile, fileModal, buildFileUpload, copyText, copyBtn };
 })(window);
