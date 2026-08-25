@@ -148,7 +148,7 @@
 
     const actions = [
       { label: '取消', value: false },
-      { label: isNew ? '创建' : '保存为新版本', value: true, primary: true, onclick: () => {
+      { label: isNew ? '创建' : '保存为新版本', value: true, primary: true, loadingText: isNew ? '⏳ 创建中…' : '⏳ 保存中…', onclick: async () => {
         const base = U.readForm(form);
         const obj = {
           brand: (base.brand || '').trim(),
@@ -160,16 +160,24 @@
           note: (base.note || '').trim(),
         };
         if (!obj.brand) { U.toast('请填写品名', 'error'); return false; }
-        if (isNew) {
-          obj.versions = [snapshot(obj, 1)];
-          DB.insert('scripts', obj).then(() => U.toast('已创建脚本', 'success'));
-        } else {
-          const vers = it.versions ? it.versions.slice() : [];
-          const nv = (vers.length ? Math.max.apply(null, vers.map(v => v.v)) : 0) + 1;
-          vers.push(snapshot(obj, nv));
-          DB.update('scripts', it.id, Object.assign({}, obj, { versions: vers })).then(() => U.toast('已保存第 ' + nv + ' 版', 'success'));
+        try {
+          if (isNew) {
+            obj.versions = [snapshot(obj, 1)];
+            await DB.insert('scripts', obj);
+            U.toast('已创建脚本', 'success');
+          } else {
+            const vers = it.versions ? it.versions.slice() : [];
+            const nv = (vers.length ? Math.max.apply(null, vers.map(v => v.v)) : 0) + 1;
+            vers.push(snapshot(obj, nv));
+            await DB.update('scripts', it.id, Object.assign({}, obj, { versions: vers }));
+            U.toast('已保存第 ' + nv + ' 版', 'success');
+          }
+          App.render();
+          return true;
+        } catch (e) {
+          U.toast((e && e.message) || '保存失败，请重试', 'error');
+          return false;
         }
-        return true;
       } },
     ];
 

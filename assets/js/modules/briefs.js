@@ -150,7 +150,7 @@
 
     const actions = [
       { label: '取消', value: false },
-      { label: isNew ? '创建' : '保存', value: true, primary: true, onclick: () => {
+      { label: isNew ? '创建' : '保存', value: true, primary: true, loadingText: isNew ? '⏳ 创建中…' : '⏳ 保存中…', onclick: async () => {
         const base = U.readForm(form);
         const obj = {
           brand: (base.brand || '').trim(),
@@ -159,12 +159,15 @@
           note: (base.note || '').trim(),
         };
         if (!obj.brand) { U.toast('请填写品名 / 品牌', 'error'); return false; }
-        if (isNew) {
-          DB.insert('briefs', obj).then(() => U.toast('已创建 Brief', 'success'));
-        } else {
-          DB.update('briefs', it.id, obj).then(() => U.toast('已保存 Brief', 'success'));
+        try {
+          if (isNew) { await DB.insert('briefs', obj); U.toast('已创建 Brief', 'success'); }
+          else { await DB.update('briefs', it.id, obj); U.toast('已保存 Brief', 'success'); }
+          App.render();
+          return true;
+        } catch (e) {
+          U.toast((e && e.message) || '保存失败，请重试', 'error');
+          return false;
         }
-        return true;
       } },
     ];
 
