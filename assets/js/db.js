@@ -208,6 +208,7 @@
     if ('createdAt' in r) { r.created_at = r.createdAt; delete r.createdAt; }
     if ('updatedAt' in r) { r.updated_at = r.updatedAt; delete r.updatedAt; }
     if ('scriptDate' in r) { r.script_date = r.scriptDate; delete r.scriptDate; }
+    if ('publishDate' in r) { r.publish_date = r.publishDate; delete r.publishDate; }
     if ('pubDate' in r) { r.pub_date = r.pubDate; delete r.pubDate; }
     if ('scriptFile' in r) { r.script_file = r.scriptFile; delete r.scriptFile; }
     if ('briefFile' in r) { r.brief_file = r.briefFile; delete r.briefFile; }
@@ -221,6 +222,7 @@
     if ('created_at' in r) { r.createdAt = r.created_at; delete r.created_at; }
     if ('updated_at' in r) { r.updatedAt = r.updated_at; delete r.updated_at; }
     if ('script_date' in r) { r.scriptDate = r.script_date; delete r.script_date; }
+    if ('publish_date' in r) { r.publishDate = r.publish_date; delete r.publish_date; }
     if ('pub_date' in r) { r.pubDate = r.pub_date; delete r.pub_date; }
     if ('script_file' in r) { r.scriptFile = r.script_file; delete r.script_file; }
     if ('brief_file' in r) { r.briefFile = r.brief_file; delete r.brief_file; }
