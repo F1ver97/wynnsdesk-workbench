@@ -64,24 +64,57 @@
   }
 
   /* --------------------------- 模态框 --------------------------- */
-  function modal({ title, body, actions, width }) {
+  function modal({ title, body, actions, width, dismissable }) {
+    if (dismissable === undefined) dismissable = true;
     return new Promise((resolve) => {
       const overlay = el('div', { class: 'modal-overlay' });
       const box = el('div', { class: 'modal-box', style: width ? 'max-width:' + width + 'px' : '' });
-      box.appendChild(el('div', { class: 'modal-head' }, [el('h3', { text: title }), el('button', { class: 'modal-close', html: '&times;', onclick: () => close(null) })]));
+      const head = el('div', { class: 'modal-head' });
+      head.appendChild(el('h3', { text: title }));
+      if (dismissable) head.appendChild(el('button', { class: 'modal-close', html: '&times;', onclick: () => close(null) }));
+      box.appendChild(head);
       const bodyEl = el('div', { class: 'modal-body' }); box.appendChild(bodyEl);
       if (typeof body === 'string') bodyEl.innerHTML = body; else if (body) bodyEl.appendChild(body);
       const foot = el('div', { class: 'modal-foot' }); box.appendChild(foot);
       overlay.appendChild(box); document.body.appendChild(overlay);
       requestAnimationFrame(() => overlay.classList.add('show'));
 
-      function close(val) { overlay.classList.remove('show'); setTimeout(() => overlay.remove(), 220); resolve(val); }
+      let closing = false;
+      function close(val) { if (closing) return; closing = true; overlay.classList.remove('show'); setTimeout(() => overlay.remove(), 220); resolve(val); }
       if (!actions) actions = [{ label: '关闭', value: true }];
-      actions.forEach(a => foot.appendChild(el('button', {
-        class: 'btn ' + (a.primary ? 'btn-primary' : '') + (a.danger ? ' btn-danger' : ''),
-        text: a.label, onclick: () => { if (a.onclick) { const r = a.onclick(); if (r && r.then) r.then(v => { if (v !== false) close(a.value); }); else if (r !== false) close(a.value); } else close(a.value); }
-      })));
-      overlay.addEventListener('click', e => { if (e.target === overlay) close(null); });
+      const btns = [];
+      actions.forEach(a => {
+        const btn = el('button', { class: 'btn ' + (a.primary ? 'btn-primary' : '') + (a.danger ? ' btn-danger' : ''), text: a.label });
+        btn.addEventListener('click', () => {
+          if (btn.disabled) return;
+          if (a.onclick) {
+            const r = a.onclick(btn);
+            if (r && r.then) {
+              const original = btn.textContent;
+              btn.disabled = true;
+              btn.textContent = a.loadingText || '⏳ 处理中…';
+              const others = btns.filter(b => b !== btn);
+              const disabledMap = others.map(b => b.disabled);
+              if (!a.keepOthersEnabled) others.forEach(b => { b.disabled = true; });
+              r.then(v => {
+                btn.disabled = false; btn.textContent = original;
+                others.forEach((b, i) => { b.disabled = a.keepOthersEnabled ? disabledMap[i] : false; });
+                if (v !== false) close(a.value);
+              }).catch(e => {
+                btn.disabled = false; btn.textContent = original;
+                others.forEach((b, i) => { b.disabled = a.keepOthersEnabled ? disabledMap[i] : false; });
+                U.toast(e && e.message || '操作失败，请重试', 'error');
+              });
+            } else if (r !== false) {
+              close(a.value);
+            }
+          } else {
+            close(a.value);
+          }
+        });
+        foot.appendChild(btn); btns.push(btn);
+      });
+      overlay.addEventListener('click', e => { if (e.target === overlay && dismissable) close(null); });
     });
   }
 

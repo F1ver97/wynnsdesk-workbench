@@ -33,6 +33,7 @@
     };
 
     const ctrl = new AbortController();
+    if (opts.signal) { try { opts.signal.addEventListener('abort', () => ctrl.abort()); } catch (e) {} }
     const timer = setTimeout(() => ctrl.abort(), opts.timeout || 180000);
     try {
       const res = await fetch(AI_PROXY_URL, {

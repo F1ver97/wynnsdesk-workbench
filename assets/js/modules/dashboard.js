@@ -309,6 +309,8 @@
   /* ================= 🤖 AI 智能解析填表（文本粘贴 / 截图上传） ================= */
   function aiParseModal() {
     let imageDataUrl = null;
+    let cancelled = false;
+    let ctrl = null;
     const body = U.el('div');
     body.appendChild(U.el('div', { class: 'muted', style: 'font-size:12.5px;line-height:1.7;margin-bottom:10px', html: '粘贴后台数据文本（粉丝量 / 播放量 / 互动率），或上传数据截图，点击「开始解析」后 AI 将自动提取并填入数据库，同时完成今日「统计账号数据」打卡。' }));
 
@@ -333,13 +335,18 @@
     fw.appendChild(fi); fw.appendChild(thumb);
     body.appendChild(fw);
 
+    const statusEl = U.el('div', { class: 'ai-parse-status', style: 'margin-top:10px;min-height:18px;font-size:12.5px;color:var(--pink-2)' });
+    body.appendChild(statusEl);
+
     U.modal({
-      title: '🤖 AI 智能解析填表', body, width: 560,
+      title: '🤖 AI 智能解析填表', body, width: 560, dismissable: false,
       actions: [
-        { label: '取消', value: false },
-        { label: '⚡ 开始解析', value: true, primary: true, onclick: async () => {
+        { label: '取消', value: false, onclick: () => { cancelled = true; if (ctrl) ctrl.abort(); statusEl.textContent = '已取消，可重新上传后再次解析'; return true; } },
+        { label: '⚡ 开始解析', value: true, primary: true, loadingText: '⏳ 解析中…', keepOthersEnabled: true, onclick: async () => {
+          cancelled = false; statusEl.textContent = '';
           const text = ta.value.trim();
           if (!text && !imageDataUrl) { U.toast('请先粘贴数据文本或上传截图', 'error'); return false; }
+          statusEl.textContent = '🔍 AI 正在识别数据，请稍候（通常 10–30 秒，大型图片更久）…';
           const today = U.fmtDate(new Date());
           const prompt = '你是自媒体后台数据解析助手。请从' + (imageDataUrl ? '上传的截图（以及我提供的文本）' : '我提供的文本') + '中识别并提取账号数据。'
             + '截图通常是 小红书/抖音 创作者主页或数据中心。需要提取：平台、日期、累计粉丝数、播放量（如有）、互动率（如有）。'
@@ -349,8 +356,10 @@
             + 'fans=累计粉丝数（必填纯数字，识别不出填 null）；views=播放量；rate=互动率百分比数字（如 6.2% 填 6.2）。'
             + '今天日期是 ' + today + '，数据中若无日期则 date 填今天。'
             + (text ? '\n辅助文本：' + text : '');
+          ctrl = new AbortController();
           try {
-            const reply = await askGeminiAI(prompt, { files: imageDataUrl ? [{ name: 'screenshot.png', mime: 'image/png', dataUrl: imageDataUrl }] : [] });
+            const reply = await askGeminiAI(prompt, { files: imageDataUrl ? [{ name: 'screenshot.png', mime: 'image/png', dataUrl: imageDataUrl }] : [], signal: ctrl.signal });
+            if (cancelled) { statusEl.textContent = ''; return false; }
             const d = aiExtractJSON(reply);
             let fans = d.fans;
             if (typeof fans === 'string') {
@@ -369,7 +378,7 @@
             } else {
               fans = Number(fans);
             }
-            if (!fans || fans <= 0 || isNaN(fans)) { U.toast('AI 未能从内容中识别出粉丝量，请补充文本或换张截图', 'error'); return false; }
+            if (!fans || fans <= 0 || isNaN(fans)) { U.toast('AI 未能从内容中识别出粉丝量，请补充文本或换张截图', 'error'); statusEl.textContent = '⚠️ 未识别到粉丝量，请补充文本或换张截图后重试'; return false; }
             const pkeys = REAL_PLATFORMS.map(p => p.key);
             const obj = {
               platform: pkeys.indexOf(d.platform) >= 0 ? d.platform : 'xhs',
@@ -382,10 +391,14 @@
             const exist = (await DB.list('metrics')).find(m => m.platform === obj.platform && m.date === obj.date);
             if (exist) await DB.update('metrics', exist.id, obj);
             else await DB.insert('metrics', obj);
+            if (cancelled) { statusEl.textContent = ''; return false; }
             U.toast('AI 已填入：' + pname(obj.platform) + ' · ' + obj.date + ' · 粉丝 ' + U.fmtNum(fans) + (exist ? '（覆盖同日旧值）' : ''), 'success');
+            statusEl.textContent = '✅ 解析完成，已写入数据库';
             return true;
           } catch (err) {
+            if (cancelled) { statusEl.textContent = ''; return false; }
             U.toast(err && err.message || 'AI 解析失败，请重试', 'error');
+            statusEl.textContent = '⚠️ ' + (err && err.message || 'AI 解析失败，请重试');
             return false;
           }
         } },
