@@ -175,7 +175,10 @@
           App.render();
           return true;
         } catch (e) {
-          U.toast((e && e.message) || '保存失败，请重试', 'error');
+          console.error('脚本保存失败', e);
+          const code = e && e.code ? (' [code ' + e.code + ']') : '';
+          const detail = e && e.details ? (' ' + e.details) : '';
+          U.toast(((e && e.message) || '保存失败，请重试') + code + detail, 'error');
           return false;
         }
       } },

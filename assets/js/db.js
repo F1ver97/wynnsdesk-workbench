@@ -294,8 +294,10 @@
         const cfg = global.SUPABASE_CONFIG;
         const sbUrl = cfg.proxyUrl || cfg.url;
         sb = global.supabase.createClient(sbUrl, cfg.anonKey, { auth: { persistSession: true, autoRefreshToken: true } });
-        // 探活：随机挑一张表做轻量查询
-        const { error } = await sb.from('metrics').select('id', { count: 'exact', head: true });
+        // 探活：轻量查询，但必须带超时——否则后端/代理无响应时会永久卡在「正在唤醒」
+        const probe = sb.from('metrics').select('id', { count: 'exact', head: true });
+        const probeTimeout = new Promise((_, rej) => setTimeout(() => rej(new Error('supabase probe timeout')), 5000));
+        const { error } = await Promise.race([probe, probeTimeout]);
         if (!error) {
           sbReady = true; mode = 'supabase';
           global.SUPABASE_CLIENT = sb; // 暴露给管理后台等需要直接调用 supabase client 的模块

@@ -1107,6 +1107,14 @@
 
   /* ----------------------------- 启动 ----------------------------- */
   async function boot() {
+    // 启动兜底：若 6 秒仍卡在「正在唤醒」，提示刷新/检查网络，避免无限白等
+    const stuckTimer = setTimeout(() => {
+      const v = document.getElementById('view');
+      if (v && v.querySelector('.loader')) {
+        v.innerHTML = '<div class="loader"><div style="max-width:320px;line-height:1.8">⏳ 加载较慢…<br><span class="muted" style="font-size:13px">若 10 秒后仍无反应，请强刷页面（电脑 Ctrl+F5 / 手机划掉标签页重开），或检查网络是否连通。</span></div></div>';
+      }
+    }, 6000);
+
     // 登录门禁（内部已 await DB.init，确保 supabase client 就绪）
     const passed = await authGate();
     if (!passed) return; // 登录页已渲染，等待用户操作
@@ -1174,6 +1182,7 @@
 
     try { paintHub(); } catch (_) {}
     if (!location.hash) location.hash = '#/dashboard'; else App.render();
+    clearTimeout(stuckTimer); // 首屏已渲染，取消"加载较慢"兜底提示
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
