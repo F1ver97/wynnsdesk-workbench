@@ -301,12 +301,22 @@
         if (!error) {
           sbReady = true; mode = 'supabase';
           global.SUPABASE_CLIENT = sb; // 暴露给管理后台等需要直接调用 supabase client 的模块
-          idb = await openIDB().catch(() => null);
-          // 恢复已有登录会话
-          const { data: ses } = await sb.auth.getSession();
-          if (ses && ses.session && ses.session.user) {
-            currentUser = { id: ses.session.user.id, email: (ses.session.user.email || '').toLowerCase() };
-          }
+          // 打开本地 IndexedDB 兜底（超时则放弃）
+          try {
+            idb = await Promise.race([
+              openIDB(),
+              new Promise((_, rej) => setTimeout(() => rej(new Error('idb open timeout')), 3000))
+            ]).catch(() => null);
+          } catch (e) { console.warn('本地 IndexedDB 打开超时', e); idb = null; }
+          // 恢复已有登录会话（auth 刷新可能挂起，必须带超时）
+          try {
+            const sesPromise = sb.auth.getSession();
+            const sesTimeout = new Promise((_, rej) => setTimeout(() => rej(new Error('auth session timeout')), 3000));
+            const { data: ses } = await Promise.race([sesPromise, sesTimeout]);
+            if (ses && ses.session && ses.session.user) {
+              currentUser = { id: ses.session.user.id, email: (ses.session.user.email || '').toLowerCase() };
+            }
+          } catch (e) { console.warn('恢复登录会话超时或失败', e); }
           return;
         }
       }
