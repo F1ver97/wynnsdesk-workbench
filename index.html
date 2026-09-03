@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>✦ 工作台 · Wynn</title>
-  <link rel="stylesheet" href="assets/css/styles.css?v=2026082523" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=2026082524" />
 </head>
 <body>
   <div class="app">
@@ -39,20 +39,21 @@
   </div>
 
   <!-- 依赖加载顺序：Supabase → 配置 → 数据层 → 工具 → 图表 → 应用核心 → 各模块 -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/supabase-config.js?v=2026082523"></script>
-  <script src="assets/js/db.js?v=2026082523"></script>
-  <script src="assets/js/util.js?v=2026082523"></script>
-  <script src="assets/js/ai.js?v=2026082523"></script>
-  <script src="assets/js/charts.js?v=2026082523"></script>
-  <script src="assets/js/app.js?v=2026082523"></script>
-  <script src="assets/js/modules/dashboard.js?v=2026082523"></script>
-  <script src="assets/js/modules/inspiration.js?v=2026082523"></script>
-  <script src="assets/js/modules/orders.js?v=2026082523"></script>
-  <script src="assets/js/modules/schedule.js?v=2026082523"></script>
-  <script src="assets/js/modules/scripts.js?v=2026082523"></script>
-  <script src="assets/js/modules/briefs.js?v=2026082523"></script>
-  <script src="assets/js/modules/settings.js?v=2026082523"></script>
-  <script src="assets/js/modules/admin.js?v=2026082523"></script>
+  <!-- supabase-js 优先走 CDN，CDN 被墙/失败时 fallback 到本地 vendor，避免 global.supabase 为 null 导致登录崩溃 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="(function(){var s=document.createElement('script');s.src='assets/js/vendor/supabase.js?v=2026082524';s.onerror=function(){window.SUPABASE_LIB_FAILED=true;};document.currentScript.parentNode.insertBefore(s,document.currentScript.nextSibling);})()"></script>
+  <script src="assets/js/supabase-config.js?v=2026082524"></script>
+  <script src="assets/js/db.js?v=2026082524"></script>
+  <script src="assets/js/util.js?v=2026082524"></script>
+  <script src="assets/js/ai.js?v=2026082524"></script>
+  <script src="assets/js/charts.js?v=2026082524"></script>
+  <script src="assets/js/app.js?v=2026082524"></script>
+  <script src="assets/js/modules/dashboard.js?v=2026082524"></script>
+  <script src="assets/js/modules/inspiration.js?v=2026082524"></script>
+  <script src="assets/js/modules/orders.js?v=2026082524"></script>
+  <script src="assets/js/modules/schedule.js?v=2026082524"></script>
+  <script src="assets/js/modules/scripts.js?v=2026082524"></script>
+  <script src="assets/js/modules/briefs.js?v=2026082524"></script>
+  <script src="assets/js/modules/settings.js?v=2026082524"></script>
+  <script src="assets/js/modules/admin.js?v=2026082524"></script>
 </body>
 </html>

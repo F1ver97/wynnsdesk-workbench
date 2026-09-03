@@ -51,6 +51,7 @@
       return !!(currentUser && currentUser.email && list.includes(currentUser.email.toLowerCase()));
     },
     async login(email, password) {
+      if (!sb) throw new Error('云端登录服务未就绪，请检查网络 / 开启 VPN 后刷新页面');
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
       if (error) throw error;
       currentUser = data.user ? { id: data.user.id, email: (data.user.email || '').toLowerCase() } : null;
@@ -58,12 +59,13 @@
       return currentUser;
     },
     async signup(email, password) {
+      if (!sb) throw new Error('云端注册服务未就绪，请检查网络 / 开启 VPN 后刷新页面');
       const { data, error } = await sb.auth.signUp({ email, password });
       if (error) throw error;
       return data;
     },
     async logout() {
-      await sb.auth.signOut();
+      if (sb) await sb.auth.signOut().catch(() => {});
       currentUser = null;
       profileCache = null;
       localStorage.removeItem('cw_display_name');
@@ -290,7 +292,11 @@
   async function detect() {
     // 0) 优先 Supabase
     try {
-      if (global.SUPABASE_CONFIG && global.SUPABASE_CONFIG.enabled && global.supabase) {
+      if (global.SUPABASE_CONFIG && global.SUPABASE_CONFIG.enabled) {
+        if (!global.supabase) {
+          console.warn('supabase-js 库未加载（CDN 可能失败），跳过 Supabase 模式');
+          throw new Error('supabase-js library not loaded');
+        }
         const cfg = global.SUPABASE_CONFIG;
         const sbUrl = cfg.proxyUrl || cfg.url;
         sb = global.supabase.createClient(sbUrl, cfg.anonKey, { auth: { persistSession: true, autoRefreshToken: true } });
@@ -474,7 +480,12 @@
     auth: Auth,
     getMode: () => mode,
     getKind: () => (mode === 'supabase' ? 'supabase' : mode === 'server' ? serverKind : 'indexeddb'),
-    init: async () => { await detect(); authReady = true; if (mode === 'supabase') await syncLocalToCloud().catch(() => {}); return mode; },
+    init: async () => {
+      await detect();
+      authReady = true;
+      if (mode === 'supabase') await syncLocalToCloud().catch(() => {});
+      return { mode, sb, sbReady, authReady };
+    },
 
     list: (col) => store().list(col),
     get: (col, id) => store().get(col, id),

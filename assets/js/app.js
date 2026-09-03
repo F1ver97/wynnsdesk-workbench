@@ -721,7 +721,8 @@
     if (!DB.auth.isEnabled()) return true; // 未开启登录，直接进
 
     // 先初始化数据层，确保 supabase client 已创建，否则登录/注册会报 null.auth
-    try { await DB.init(); } catch (_) {}
+    let initState = { mode: '', sb: null };
+    try { initState = await DB.init() || initState; } catch (_) {}
 
     // 处理邀请注册链接 ?invite=email
     const params = new URLSearchParams(location.search);
@@ -739,6 +740,10 @@
         card.appendChild(U.el('div', { class: 'auth-title', text: mode === 'signup' ? '创建账号' : '登录工作台' }));
 
         const form = U.el('form', { class: 'auth-form' });
+        if (!initState.sb) {
+          const netWarn = U.el('div', { class: 'auth-err', style: 'margin-bottom:10px;line-height:1.5', html: '⚠ 当前无法连接云端登录服务<br><small>请检查网络或开启 VPN 后刷新页面再试</small>' });
+          card.appendChild(netWarn);
+        }
         const emailI = U.el('input', { type: 'email', placeholder: '邮箱', value: prefillEmail || (inviteEmail || ''), required: true });
         const nameI = U.el('input', { type: 'text', placeholder: '昵称（如 Wynn）', required: true });
         const pwdI = U.el('input', { type: 'password', placeholder: '密码（至少 6 位）', minLength: 6, required: true });
